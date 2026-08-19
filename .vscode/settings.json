@@ -1,0 +1,4 @@
+{
+    "python.defaultInterpreterPath": "/Users/Azima/.pyenv/versions/3.12.4/envs/ai-dev/bin/python",
+    "python.analysis.autoImportCompletions": true
+}

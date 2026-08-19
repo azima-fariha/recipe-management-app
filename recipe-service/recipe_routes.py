@@ -1,37 +1,50 @@
 import logging
-from fastapi import APIRouter, HTTPException, Request
-from schemas import RecipeDto, RecipeCreatedEvent
-import recipe_repository
-from recipe_repository import get_recipe_by_id
-from aiokafka import AIOKafkaProducer
+from fastapi import APIRouter, Request
+from fastapi.responses import Response
+from schemas import RecipeDto, RecipeUpdateDto
+import recipe_service
+import mapper
+import kafka_producer
 
-# Kafka topic name other services (e.g. the embedding service) subscribe to for new recipes.
-RECIPE_CREATED_TOPIC = "recipe-created"
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["recipes"])
 
-@router.get("/recipe/{recipe_id}")
-async def get_recipe(recipe_id: str) -> RecipeDto:
-    logger.info("Received request to fetch recipe with id: %s", recipe_id)
-    recipe = await get_recipe_by_id(recipe_id)
-    if recipe is None:
-        logger.warning("Recipe with id %s not found", recipe_id)
-        raise HTTPException(status_code=404, detail=f"Recipe with id {recipe_id} not found")
-    return RecipeDto(**recipe, id=str(recipe["_id"]))
-    
-@router.post("/recipe")
-async def create_recipe(recipeRequest: RecipeDto, request: Request) -> RecipeDto:
-   logger.info("Received request to create recipe")
-   recipe_dict = recipeRequest.dict(exclude={"id"})  # id is assigned by Mongo on insert, not by the client
-   recipe = await recipe_repository.create_recipe(recipe_dict)
-   recipe_id = str(recipe.inserted_id)
-   
-   logger.info("Sending Kafka event with id: %s", recipe_id)
-   producer: AIOKafkaProducer = request.state.kafka_producer
-   event = RecipeCreatedEvent(**recipe_dict, id=recipe_id)
-   await producer.send_and_wait(RECIPE_CREATED_TOPIC, key=recipe_id, value=event.dict())
+@router.get("/user/{user_id}/recipe/{recipe_id}")
+async def get_recipe(user_id: str, recipe_id: str) -> RecipeDto:
+    logger.info("Received request to fetch recipe with user_id: %s recipe_id: %s ", user_id, recipe_id)
+    recipe = await recipe_service.get_recipe_by_id(user_id, recipe_id)
+    return mapper.to_dto(recipe)
 
-   return RecipeDto(**recipe_dict, id=recipe_id)
+@router.post("/user/{user_id}/recipe")
+async def create_recipe(user_id: str, recipeRequest: RecipeDto, request: Request) -> RecipeDto:
+   logger.info("Received request to create recipe with user_id: %s", user_id)
+   recipe = mapper.to_model(recipeRequest, user_id)
+   recipe = await recipe_service.create_recipe(recipe)
+   
+   producer = request.state.kafka_producer
+   await kafka_producer.publish_event(producer, recipe)
+   
+   return mapper.to_dto(recipe)
+
+@router.put("/user/{user_id}/recipe/{recipe_id}")
+async def update_recipe(user_id: str, recipe_id: str, recipeRequest: RecipeUpdateDto, request: Request) -> RecipeDto:
+    logger.info("Received request to update recipe with user_id: %s recipe_id: %s", user_id, recipe_id)
+    recipe = await recipe_service.get_recipe_by_id(user_id, recipe_id)
+    updated_recipe = await recipe_service.update_recipe(recipe, recipeRequest)
+    
+    producer = request.state.kafka_producer
+    await kafka_producer.publish_event(producer, updated_recipe)
+       
+    return mapper.to_dto(updated_recipe)
+
+@router.delete("/user/{user_id}/recipe/{recipe_id}")
+async def delete_recipe(user_id: str, recipe_id: str, request: Request) -> None:
+    logger.info("Received request to delete recipe with user_id: %s recipe_id: %s", user_id, recipe_id)
+    recipe = await recipe_service.get_recipe_by_id(user_id, recipe_id)
+    await recipe_service.delete_recipe(recipe)
+
+    producer = request.state.kafka_producer
+    await kafka_producer.publish_deletion_event(producer, recipe_id)
+    
+    return Response(status_code=204)

@@ -1,0 +1,9 @@
+fastapi
+aiokafka
+qdrant-client
+langchain-openai
+langchain-qdrant
+python-dotenv
+uvicorn[standard]
+openai
+pydantic

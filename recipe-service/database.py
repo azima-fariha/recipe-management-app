@@ -1,28 +1,27 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+import os
+from pymongo import AsyncMongoClient
+from beanie import init_beanie
+from models import Recipe
 
-# Connection string for the local Mongo instance (see docker run command
-# that published the container's port to localhost:27017)
-MONGO_URL = "mongodb://localhost:27017"
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 
 # Client manages a pooled connection to the Mongo server for the app's
 # lifetime. Unlike SQLAlchemy's engine, there's no separate session object
 # to open/close per request - the client handles connections internally.
-client = AsyncIOMotorClient(MONGO_URL)
+# Uses PyMongo's native async client rather than Motor - Motor is being
+# phased out in favor of this, and Beanie 2.x targets it directly (Motor's
+# client trips up Beanie's driver-metadata registration on startup).
+client = AsyncMongoClient(MONGO_URL)
 
 # Grabs a reference to the "recipe_db" database. Mongo creates it lazily
 # on first write, so there's no equivalent of Base.metadata.create_all().
 database = client["recipe_db"]
 
-# Reference to the "recipes" collection (Mongo's equivalent of a table).
-# Created lazily too - repository functions call find_one()/insert_one()
-# directly on this object.
-recipes_collection = database["recipes"]
-
-# FastAPI dependency (used via Depends() in routes) that hands the
-# collection to route handlers. No open/close lifecycle needed here -
-# unlike get_db()'s generator + yield/finally in user-service, Motor's
-# collection object is safe to reuse across requests since the client
-# already manages the connection pool.
-def get_recipe_collection():
-    return recipes_collection
-
+# Registers Beanie's Document models against this database, so Recipe.get(),
+# Recipe.insert(), etc. know which client/collection to use under the hood.
+# Beanie is the ODM layer here - it's what SQLAlchemy's User model is to
+# MySQL in user-service, giving routes/repositories real objects instead of
+# raw dicts. Must be awaited once at startup (see main.py's lifespan) before
+# any Recipe query/insert is made.
+async def init_db():
+    await init_beanie(database=database, document_models=[Recipe])
