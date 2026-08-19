@@ -29,7 +29,7 @@ flowchart LR
 
 1. A client talks only to **consumer-api**, which proxies requests to the internal services.
 2. Creating/updating/deleting a recipe in **recipe-service** publishes an event to the Kafka
-   topic `recipe-created` (a `null` value is a tombstone for deletions).
+   topic `recipe-created`.
 3. **recipe-embedding-service** consumes that topic, embeds the recipe text with OpenAI
    (`text-embedding-3-large`), and upserts it into **Qdrant**.
 4. For "find me something to cook" requests, **discovery-agent-service** runs a LangChain
