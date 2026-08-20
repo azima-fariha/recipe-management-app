@@ -1,6 +1,6 @@
 # User Service
 
-FastAPI microservice responsible for user CRUD — profile info, dietary restrictions, and
+FastAPI microservice responsible for user CRUD - profile info, dietary restrictions, and
 preferences — backed by MySQL. It is one of the internal services in the
 [recipe-management-app](../README.md) platform and is normally reached through
 [consumer-api](../consumer-api), though it can also be called directly.
