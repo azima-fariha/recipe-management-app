@@ -23,9 +23,6 @@ above, e.g. the ingredients aren't real), still return a recipe: leave `ingredie
 use `instructions` to state the reason for the refusal.
 """
 
-# System prompts are bound to their agents at creation time (see main.py) so each
-# persona - and, for the recipes agent, its response_format - stays fixed per agent
-# instead of being re-specified on every call.
 discover_recipes_prompt = ChatPromptTemplate.from_messages([
     ("human", "user_id: {user_id}\nuser query: {query}"),
 ])

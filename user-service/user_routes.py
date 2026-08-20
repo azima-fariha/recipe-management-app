@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["users"])
 
-
 @router.get("/user/{user_id}")
 async def get_user(user_id: int, db: Session = Depends(get_db)) -> UserDto:
     logger.info("Received request to fetch user with id: %s", user_id)

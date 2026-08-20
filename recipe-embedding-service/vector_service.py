@@ -11,14 +11,13 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-TOP_K = 2  # Number of similar texts to retrieve
-SCORE_THRESHOLD = 0.35  # Minimum cosine similarity for a match to be considered relevant
+TOP_K = 2  
+SCORE_THRESHOLD = 0.35  
 
 
 client = get_qdrant_client()
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-large")  # Initialize OpenAI embeddings
-
+embeddings = OpenAIEmbeddings(model="text-embedding-3-large")  
 vector_store = QdrantVectorStore(
     client=client,
     collection_name=COLLECTION_NAME,

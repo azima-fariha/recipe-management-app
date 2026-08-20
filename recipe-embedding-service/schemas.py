@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 class IngredientRequest(BaseModel):
     ingredientRequest: str
 
-
 class RecipeCreatedEvent(BaseModel):
     id: Optional[str] = None
     user_id: Optional[str] = None

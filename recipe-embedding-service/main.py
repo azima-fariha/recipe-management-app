@@ -59,8 +59,6 @@ async def consume_recipe_events(consumer: AIOKafkaConsumer):
                 continue
 
             if raw_value is None:
-                # Tombstone event for a deleted recipe.
-                # TODO: remove the corresponding vector from Qdrant once vector_service exposes a delete method.
                 await asyncio.to_thread(vector_service.delete_recipe, key)
                 logger.info("Received tombstone event for recipe id=%s; skipping vectorization", key)
                 continue

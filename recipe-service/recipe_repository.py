@@ -2,7 +2,6 @@ from typing import Optional
 from beanie import PydanticObjectId
 from models import Recipe
 
-
 async def get_recipe_by_id(recipe_id: str) -> Optional[Recipe]:
     return await Recipe.get(PydanticObjectId(recipe_id))
 
