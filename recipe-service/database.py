@@ -1,9 +1,11 @@
 import os
-from pymongo import AsyncMongoClient
+
 from beanie import init_beanie
 from models import Recipe
+from pymongo import AsyncMongoClient
 
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+
 client = AsyncMongoClient(MONGO_URL)
 database = client["recipe_db"]
 

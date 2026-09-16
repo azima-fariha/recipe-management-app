@@ -1,10 +1,11 @@
 import logging
+
+import kafka_producer
+import mapper
+import recipe_service
 from fastapi import APIRouter, Request
 from fastapi.responses import Response
 from schemas import RecipeDto, RecipeUpdateDto
-import recipe_service
-import mapper
-import kafka_producer
 
 logger = logging.getLogger(__name__)
 

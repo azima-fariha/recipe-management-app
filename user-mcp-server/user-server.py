@@ -1,9 +1,13 @@
 import logging
 import os
-from fastmcp import FastMCP
-import requests
 
-logging.basicConfig(level=logging.INFO)
+import requests
+from fastmcp import FastMCP
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("User Server")
@@ -22,3 +26,4 @@ def get_user_by_id(user_id: str) -> dict:
 
 if __name__ == "__main__":
     mcp.run(transport="streamable-http", host="0.0.0.0", port=8086)
+    

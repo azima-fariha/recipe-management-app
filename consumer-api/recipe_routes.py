@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Request
+import logging
+
 import httpx
 import recipe_api
-import logging
-from schemas import RecipeDto, RecipeUpdateDto
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
+from schemas import RecipeDto, RecipeUpdateDto
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ router = APIRouter(tags=["recipes"])
 
 @router.get("/user/{user_id}/recipe/{recipe_id}")
 async def fetch_recipe(user_id: str, recipe_id:str, request: Request) -> RecipeDto:
-    logger.info(f"Received user request to fetch recipe with user_id: %s, recipe_id: %s", user_id, recipe_id)
+    logger.info("Received user request to fetch recipe with user_id: %s, recipe_id: %s", user_id, recipe_id)
     http_client = request.state.http_client
     try:
         recipe = await recipe_api.fetch_recipe(http_client, user_id, recipe_id)
@@ -22,7 +23,7 @@ async def fetch_recipe(user_id: str, recipe_id:str, request: Request) -> RecipeD
 
 @router.post("/user/{user_id}/recipe")
 async def create_recipe(user_id: str, recipeRequest: RecipeDto, request: Request)-> RecipeDto:
-    logger.info(f"Received request to create a new recipe with user_id: %s", user_id)
+    logger.info("Received request to create a new recipe with user_id: %s", user_id)
     http_client = request.state.http_client
     try:
         recipe = await recipe_api.create_recipe(http_client, user_id, recipeRequest.dict())

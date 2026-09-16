@@ -1,14 +1,14 @@
 import json
 import logging
 import os
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from aiokafka import AIOKafkaProducer
 from contextlib import asynccontextmanager
+
 import recipe_routes
+from aiokafka import AIOKafkaProducer
 from database import init_db
 from exceptions import AppError
-
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 logging.basicConfig(
     level=logging.INFO,

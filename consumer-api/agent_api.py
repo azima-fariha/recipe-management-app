@@ -1,7 +1,10 @@
 import logging
 import os
+
 from httpx import AsyncClient
 from schemas import DiscoverRequest
+
+logger = logging.getLogger(__name__)
 
 AGENT_SERVICE_URL = os.environ.get("AGENT_SERVICE_URL", "http://localhost:8084")
 

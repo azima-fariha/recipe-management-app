@@ -1,19 +1,19 @@
-import json
-import os
-from fastapi import FastAPI
-from aiokafka import AIOKafkaConsumer
 import asyncio
+import json
 import logging
-import vector_service
+import os
 from contextlib import asynccontextmanager
+
 import vector_routes
+import vector_service
+from aiokafka import AIOKafkaConsumer
+from fastapi import FastAPI
 from schemas import RecipeCreatedEvent
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s - %(message)s",
 )
-
 logger = logging.getLogger(__name__)
 
 RECIPE_KAFKA_TOPIC = "recipe-created"

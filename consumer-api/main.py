@@ -1,10 +1,11 @@
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+
+import agent_routes
 import httpx
 import recipe_routes
 import user_routes
-import agent_routes
-import logging
+from fastapi import FastAPI
 
 logging.basicConfig(
     level=logging.INFO,

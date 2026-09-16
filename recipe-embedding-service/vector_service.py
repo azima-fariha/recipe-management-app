@@ -1,10 +1,11 @@
+import logging
+import uuid
+
+from database import COLLECTION_NAME, get_qdrant_client
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client.models import FieldCondition, Filter, MatchValue
-from database import COLLECTION_NAME, get_qdrant_client
-import uuid
-import logging
 from schemas import RecipeCreatedEvent
 
 load_dotenv()
