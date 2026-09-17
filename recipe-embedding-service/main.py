@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-RECIPE_KAFKA_TOPIC = "recipe-created"
+RECIPE_KAFKA_TOPIC = "recipe-log"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
