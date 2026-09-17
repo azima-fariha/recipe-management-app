@@ -1,5 +1,6 @@
 from beanie import Document
 
+
 class Recipe(Document):
     name: str
     ingredients: list[str]

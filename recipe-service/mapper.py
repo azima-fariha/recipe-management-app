@@ -1,5 +1,6 @@
 from models import Recipe
-from schemas import RecipeDto, RecipeCreatedEvent
+from schemas import RecipeDto
+
 
 def to_dto(recipe: Recipe) -> RecipeDto:
     return RecipeDto(

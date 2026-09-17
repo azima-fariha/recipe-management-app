@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
 import logging
+
 import user_repository
 from database import get_db
-from sqlalchemy.orm import Session
-from schemas import UserDto, UserUpdateDto
+from fastapi import APIRouter, Depends, HTTPException
 from models import User
+from schemas import UserDto, UserUpdateDto
+from sqlalchemy.orm import Session
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["users"])

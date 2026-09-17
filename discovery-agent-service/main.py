@@ -1,13 +1,14 @@
+import logging
 import os
 from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain.agents import create_agent
-from fastapi import FastAPI
+
 import discovery_routes
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from langchain.agents import create_agent
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from prompts import DISCOVER_RECIPES_SYSTEM_PROMPT
 from schemas import RecipeResult
-import logging
 
 load_dotenv()
 

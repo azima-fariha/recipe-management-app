@@ -1,9 +1,13 @@
 import logging
 import os
-from fastmcp import FastMCP
-import requests
 
-logging.basicConfig(level=logging.INFO)
+import requests
+from fastmcp import FastMCP
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("Recipe Server")
@@ -25,6 +29,3 @@ def get_recipe_by_ingredient(user_id: str, ingredients: str) -> list[dict]:
 
 if __name__ == "__main__":
     mcp.run(transport="streamable-http", host="0.0.0.0", port=8085)
-
-    
-    

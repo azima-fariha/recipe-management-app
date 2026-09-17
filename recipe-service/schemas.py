@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class RecipeDto(BaseModel):
     id: Optional[str] = None
@@ -18,5 +20,3 @@ class RecipeCreatedEvent(BaseModel):
     ingredients: list[str]
     instructions: str
     user_id: str
-
-        

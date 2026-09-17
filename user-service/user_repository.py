@@ -1,15 +1,16 @@
 from models import User
-from sqlalchemy.orm import Session
 from schemas import UserUpdateDto
+from sqlalchemy.orm import Session
+
 
 def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).get(user_id)
 
-def create_user(db:Session, user_data: User) -> User:
-    db.add(user_data)
+def create_user(db:Session, user: User) -> User:
+    db.add(user)
     db.commit()
-    db.refresh(user_data)
-    return user_data
+    db.refresh(user)
+    return user
 
 def update_user(db: Session, user: User, user_data: UserUpdateDto) -> User:
     if user:

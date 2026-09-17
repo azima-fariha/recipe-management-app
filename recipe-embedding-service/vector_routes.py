@@ -1,6 +1,7 @@
 import logging
-from fastapi import APIRouter
+
 import vector_service
+from fastapi import APIRouter
 from schemas import IngredientRequest
 
 logger = logging.getLogger(__name__)

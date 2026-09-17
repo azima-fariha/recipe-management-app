@@ -1,8 +1,8 @@
 import logging
+
 from fastapi import APIRouter, Request
 from prompts import discover_recipes_prompt
 from schemas import DiscoverRequest, RecipeResult
-
 
 logger = logging.getLogger(__name__)
 
