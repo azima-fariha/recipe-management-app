@@ -22,7 +22,7 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 vector_store = QdrantVectorStore(
     client=client,
     collection_name=COLLECTION_NAME,
-    embedding=embeddings,
+    embedding=embeddings
 )
 
 def point_id(recipe_id: str) -> str:
@@ -36,15 +36,9 @@ def vectorize_recipe(recipe: RecipeCreatedEvent):
     id = vector_store.add_texts([text], ids=[point_id(recipe.id)], metadatas=[{"recipe_id": recipe.id, "user_id": recipe.user_id}])
     logger.info("Saved document with point id:%s", id)
 
-
-#def retrieve_similar_texts(query: str):
-#    """Retrieve similar texts from Qdrant based on the query."""
-#    logger.info("Retrieving similar texts with: %s", query[:20])
-#    return vector_store.similarity_search(query, k=TOP_K)
-
 def retrieve_similar_texts_by_user(user_id: str, query: str):
     """Retrieve similar texts from Qdrant based on the query, restricted to the given user_id."""
-    logger.info("Retrieving similar texts for user_id:%s with: %s", user_id, query[:20])
+    logger.info("Retrieving similar documents for user_id:%s with query: %s", user_id, query[:20])
     metadata_filter = Filter(
         must=[FieldCondition(key="metadata.user_id", match=MatchValue(value=user_id))]
     )

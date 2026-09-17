@@ -13,7 +13,7 @@ client = QdrantClient(url=QDRANT_URL)
 if not client.collection_exists(COLLECTION_NAME):
     client.create_collection(
         collection_name=COLLECTION_NAME,
-        vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
+        vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE)
     )
 
 client.create_payload_index(

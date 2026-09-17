@@ -51,19 +51,19 @@ async def consume_recipe_events(consumer: AIOKafkaConsumer):
     async for msg in consumer:
         key = msg.key
         raw_value = msg.value #dict
-        logger.info("Consumed kafka event with key=%s and value=%s", key, raw_value)
         
         try:
             if key is None:
-                logger.warning("Skipping recipe event because the key is null")
+                logger.error("Skipping event because the key is null")
                 continue
 
             if raw_value is None:
+                logger.info("Received tombstone event for recipe id=%s", key)
                 await asyncio.to_thread(vector_service.delete_recipe, key)
-                logger.info("Received tombstone event for recipe id=%s; skipping vectorization", key)
                 continue
-
+            
+            logger.info("Received event with key=%s and value=%s", key, raw_value)
             recipe = RecipeCreatedEvent.model_validate(raw_value)
             await asyncio.to_thread(vector_service.vectorize_recipe, recipe)
         except Exception:
-            logger.exception("Failed to process recipe event with key=%s", key)
+            logger.exception("Failed to process event with key=%s", key)
