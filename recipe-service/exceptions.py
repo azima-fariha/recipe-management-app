@@ -10,3 +10,7 @@ class NotFoundError(AppError):
 
 class ForbiddenError(AppError):
     status_code: int = 403
+    
+class BadRequestError(AppError):
+    status_code: int = 400
+    

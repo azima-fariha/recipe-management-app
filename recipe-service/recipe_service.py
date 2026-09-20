@@ -1,13 +1,18 @@
 import logging
 
 import recipe_repository
-from exceptions import ForbiddenError, NotFoundError
+from bson import ObjectId
+from exceptions import BadRequestError, ForbiddenError, NotFoundError
 from models import Recipe
 from schemas import RecipeUpdateDto
 
 logger = logging.getLogger(__name__)
 
 async def get_recipe_by_id(user_id: str, recipe_id: str) -> Recipe:
+    if not ObjectId.is_valid(recipe_id):
+        logger.warning("Invalid recipe id format: %s", recipe_id)
+        raise BadRequestError(reason="Invalid recipe id")
+    
     recipe = await recipe_repository.get_recipe_by_id(recipe_id)
     
     if recipe is None:
