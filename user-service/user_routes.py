@@ -39,3 +39,14 @@ async def update_user(user_id: int, userRequest: UserUpdateDto, db: Session = De
         raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
     updated_user = user_repository.update_user(db, user, userRequest)
     return updated_user
+
+@router.delete("/user/{user_id}")
+async def delete_user(user_id: int, db: Session = Depends(get_db)) -> None:
+    logger.info("Received request to delete user with id: %s", user_id)
+    user = user_repository.get_user_by_id(db, user_id)
+    if user is None:
+        logger.warning("User with id %s not found", user_id)
+        raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
+    user_repository.delete_user(db, user)
+    return None
+

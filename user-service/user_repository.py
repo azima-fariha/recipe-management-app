@@ -20,3 +20,8 @@ def update_user(db: Session, user: User, user_data: UserUpdateDto) -> User:
         db.refresh(user)
         return user
     return None
+
+def delete_user(db: Session, user: User) -> None:
+    if user:
+        db.delete(user)
+        db.commit()
