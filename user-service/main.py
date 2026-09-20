@@ -8,6 +8,6 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s - %(message)s"
 )
 
-app = FastAPI()
+app = FastAPI(title="user-service")
 
 app.include_router(user_routes.router)

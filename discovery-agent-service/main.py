@@ -43,5 +43,5 @@ async def lifespan(app: FastAPI):
    
     yield {"recipe_agent": recipe_agent}
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="discovery-agent-service")
 app.include_router(discovery_routes.router)

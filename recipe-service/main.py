@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 
     await producer.stop()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="recipe-service")
 
 app.include_router(recipe_routes.router)
 

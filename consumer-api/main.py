@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     yield {"http_client": client}
     await client.aclose()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="consumer-api")
 app.include_router(recipe_routes.router)
 app.include_router(user_routes.router)
 app.include_router(agent_routes.router)

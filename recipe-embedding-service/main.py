@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
         pass
     await consumer.stop()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="recipe-embedding-service")
 
 app.include_router(vector_routes.router)
 
