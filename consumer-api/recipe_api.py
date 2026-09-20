@@ -1,9 +1,11 @@
 import logging
+import os
 
-from config import RECIPE_SERVICE_URL
 from httpx import AsyncClient
 
 logger = logging.getLogger(__name__)
+
+RECIPE_SERVICE_URL = os.environ.get("RECIPE_SERVICE_URL", "http://localhost:8082")
 
 async def fetch_recipe(client: AsyncClient, user_id: str, recipe_id: str):
     logger.info("Calling recipe-service with user_id %s, recipe_id: %s", user_id, recipe_id)

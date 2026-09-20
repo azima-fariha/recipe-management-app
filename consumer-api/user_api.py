@@ -1,10 +1,12 @@
 import logging
+import os
 
-from config import USER_SERVICE_URL
 from httpx import AsyncClient
 from schemas import UserUpdateDto
 
 logger = logging.getLogger(__name__)
+
+USER_SERVICE_URL = os.environ.get("USER_SERVICE_URL", "http://localhost:8081")
 
 async def fetch_user(client: AsyncClient, user_id: str):
     logger.info("Calling user service with id %s", user_id)
