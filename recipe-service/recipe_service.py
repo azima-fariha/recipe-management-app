@@ -1,8 +1,10 @@
 import logging
 
 import recipe_repository
+import user_api
 from bson import ObjectId
 from exceptions import BadRequestError, ForbiddenError, NotFoundError
+from httpx import AsyncClient
 from models import Recipe
 from schemas import RecipeUpdateDto
 
@@ -25,7 +27,9 @@ async def get_recipe_by_id(user_id: str, recipe_id: str) -> Recipe:
     
     return recipe
 
-async def create_recipe(recipe: Recipe) -> Recipe:
+async def create_recipe(recipe: Recipe, user_id: str, client: AsyncClient) -> Recipe:
+    await user_api.fetch_user(client, user_id)
+
     logger.info("Creating recipe with name %s", recipe.name)
     created_recipe = await recipe_repository.create_recipe(recipe)
     logger.info("Recipe with id %s created successfully", created_recipe.id)

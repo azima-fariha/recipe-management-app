@@ -4,3 +4,4 @@ pymongo>=4.9
 beanie
 uvicorn[standard]
 pydantic
+httpx

@@ -3,6 +3,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
+import httpx
 import recipe_routes
 from aiokafka import AIOKafkaProducer
 from database import init_db
@@ -19,6 +20,8 @@ logging.basicConfig(
 async def lifespan(app: FastAPI):
     await init_db()
 
+    client = httpx.AsyncClient(timeout=10.0)
+
     producer = AIOKafkaProducer(
         bootstrap_servers=os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
@@ -26,9 +29,10 @@ async def lifespan(app: FastAPI):
     )
     await producer.start()
 
-    yield {"kafka_producer": producer}
+    yield {"http_client": client, "kafka_producer": producer}
 
     await producer.stop()
+    await client.aclose()
 
 app = FastAPI(lifespan=lifespan, title="recipe-service")
 

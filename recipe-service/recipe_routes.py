@@ -21,7 +21,7 @@ async def get_recipe(user_id: str, recipe_id: str) -> RecipeDto:
 async def create_recipe(user_id: str, recipeRequest: RecipeDto, request: Request) -> RecipeDto:
    logger.info("Received request to create recipe with user_id: %s", user_id)
    recipe = mapper.to_model(recipeRequest, user_id)
-   recipe = await recipe_service.create_recipe(recipe)
+   recipe = await recipe_service.create_recipe(recipe, user_id, request.state.http_client)
    
    producer = request.state.kafka_producer
    await kafka_producer.publish_event(producer, recipe)
@@ -49,3 +49,5 @@ async def delete_recipe(user_id: str, recipe_id: str, request: Request) -> None:
     await kafka_producer.publish_deletion_event(producer, recipe_id)
     
     return Response(status_code=204)
+
+
