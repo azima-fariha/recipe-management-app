@@ -90,8 +90,56 @@ export async function fetchUser(userId: string, token: string): Promise<ApiUser>
   return body as ApiUser;
 }
 
+export interface UpdateUserRequest {
+  full_name?: string;
+  dietary_restrictions?: string | null;
+  preferences?: string | null;
+}
+
+/**
+ * Updates a user's profile via consumer-api's `PUT /user/{user_id}`.
+ *
+ * Note: that route currently echoes back only `full_name`,
+ * `dietary_restrictions`, and `preferences` (not `id`/`email`) — a
+ * pre-existing trait of consumer-api's response shape, not something this
+ * ticket changes.
+ */
+export async function updateUser(
+  userId: string,
+  token: string,
+  data: UpdateUserRequest,
+): Promise<Partial<ApiUser>> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as Partial<ApiUser>;
+}
+
+/** Deletes a user's own account via consumer-api's `DELETE /user/{user_id}`. */
+export async function deleteUser(userId: string, token: string): Promise<void> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const body = await parseJsonSafely(response);
+    throw new ConsumerApiError(response.status, body);
+  }
+}
+
 export interface ApiRecipe {
-  id: string;
+  // Nullable because the "find or invent" flow (discoverRecipe, below) can
+  // return a freshly-invented recipe that hasn't been saved yet. Recipes
+  // fetched/created/updated via the functions below always have a real id.
+  id: string | null;
   name: string;
   ingredients: string[];
   instructions: string;
@@ -190,4 +238,33 @@ export async function deleteRecipe(userId: string, recipeId: string, token: stri
     const body = await parseJsonSafely(response);
     throw new ConsumerApiError(response.status, body);
   }
+}
+
+/**
+ * Calls consumer-api's "find or invent a recipe" agent flow
+ * (`POST /user/{user_id}/inspiration`), forwarding the Access Token the same
+ * way `fetchUser` does. consumer-api responds with a recipe (found among the
+ * user's own recipes, or invented, taking their dietary restrictions and
+ * preferences into account server-side) or a 404 if nothing was found or
+ * invented for the given ingredients.
+ */
+export async function discoverRecipe(
+  userId: string,
+  token: string,
+  query: string,
+): Promise<ApiRecipe> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/inspiration`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as ApiRecipe;
 }

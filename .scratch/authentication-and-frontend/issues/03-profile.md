@@ -4,8 +4,8 @@
 
 **Blocked by:** 02 (frontend shell)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A profile page shows the logged-in user's name, dietary restrictions, and preferences
-- [ ] The user can edit those fields and save the changes
-- [ ] The user can delete their own account, which ends their session and returns them to `/login`
+- [x] A profile page shows the logged-in user's name, dietary restrictions, and preferences
+- [x] The user can edit those fields and save the changes
+- [x] The user can delete their own account, which ends their session and returns them to `/login`

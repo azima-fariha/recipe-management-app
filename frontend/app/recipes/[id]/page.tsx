@@ -59,7 +59,10 @@ export default async function RecipePage({ params }: RecipePageProps) {
       <p>
         <Link href={`/recipes/${recipe.id}/edit`}>Edit recipe</Link>
       </p>
-      <DeleteRecipeButton recipeId={recipe.id} />
+      {/* A recipe fetched by its own id from the URL always has one (see
+          ApiRecipe's id comment in lib/consumer-api.ts — only invented,
+          unsaved recipes from the inspiration flow can lack one). */}
+      {recipe.id && <DeleteRecipeButton recipeId={recipe.id} />}
     </main>
   );
 }

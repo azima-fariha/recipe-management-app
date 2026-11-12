@@ -26,6 +26,11 @@ async def update_user(client: AsyncClient, user_id: str, user_data: UserUpdateDt
     response.raise_for_status()
     return response.json()
 
+async def delete_user(client: AsyncClient, user_id: str):
+    logger.info("Calling user service to delete user with id %s", user_id)
+    response = await client.delete(f"{USER_SERVICE_URL}/user/{user_id}")
+    response.raise_for_status()
+
 async def verify_credentials(client: AsyncClient, email: str, password: str):
     """Calls user-service's internal-only credential verification endpoint."""
     logger.info("Calling user service to verify credentials")
