@@ -60,6 +60,27 @@ export function getSessionToken(request: NextRequest): string | undefined {
   return request.cookies.get(SESSION_COOKIE_NAME)?.value;
 }
 
+export interface Session {
+  token: string;
+  userId: string;
+}
+
+/**
+ * Reads the Access Token out of this request's own session cookie (never a
+ * browser-visible value) and the user id it belongs to. Returns null when
+ * there's no usable session — middleware.ts already redirects page
+ * navigations without one, but API routes can also be reached directly, so
+ * each one checks again rather than trusting the caller.
+ */
+export function requireSession(request: NextRequest): Session | null {
+  const token = getSessionToken(request);
+  const payload = token ? decodeAccessToken(token) : null;
+  if (!token || !payload) {
+    return null;
+  }
+  return { token, userId: payload.sub };
+}
+
 export function setSessionCookie(response: NextResponse, token: string): void {
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,

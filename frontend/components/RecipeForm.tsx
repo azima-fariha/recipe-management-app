@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { type FormEvent } from "react";
 
+import { useApiAction } from "@/hooks/useApiAction";
 import type { ApiRecipe } from "@/lib/consumer-api";
 
 interface RecipeFormProps {
@@ -13,13 +14,10 @@ interface RecipeFormProps {
 
 export function RecipeForm({ mode, recipe }: RecipeFormProps) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const { pending, error, run } = useApiAction();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
     const ingredients = String(formData.get("ingredients") ?? "")
@@ -36,22 +34,20 @@ export function RecipeForm({ mode, recipe }: RecipeFormProps) {
     const url = mode === "create" ? "/api/recipes" : `/api/recipes/${recipe?.id}`;
     const method = mode === "create" ? "POST" : "PUT";
 
-    const response = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.ok) {
-      const body = await response.json();
-      router.push(`/recipes/${body.recipe.id}`);
-      router.refresh();
-      return;
-    }
-
-    setSubmitting(false);
-    const body = await response.json().catch(() => null);
-    setError(body?.error ?? "Something went wrong. Please try again.");
+    await run<{ recipe: ApiRecipe }>(
+      () =>
+        fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }),
+      {
+        onSuccess: (body) => {
+          router.push(`/recipes/${body.recipe.id}`);
+          router.refresh();
+        },
+      },
+    );
   }
 
   return (
@@ -70,8 +66,8 @@ export function RecipeForm({ mode, recipe }: RecipeFormProps) {
         Instructions
         <textarea name="instructions" defaultValue={recipe?.instructions} required />
       </label>
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Saving..." : "Save recipe"}
+      <button type="submit" disabled={pending}>
+        {pending ? "Saving..." : "Save recipe"}
       </button>
     </form>
   );

@@ -3,25 +3,23 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useApiAction } from "@/hooks/useApiAction";
+
 export function DeleteAccountButton() {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, run } = useApiAction();
 
   async function handleDelete() {
-    setError(null);
-    const response = await fetch("/api/profile", { method: "DELETE" });
-
-    if (response.ok) {
-      // The route handler already cleared the session cookie; this ends
-      // the session on the device the user is using.
-      router.push("/login");
-      router.refresh();
-      return;
-    }
-
-    const body = await response.json().catch(() => null);
-    setError(body?.error ?? "Could not delete account. Please try again.");
+    await run(() => fetch("/api/profile", { method: "DELETE" }), {
+      onSuccess: () => {
+        // The route handler already cleared the session cookie; this ends
+        // the session on the device the user is using.
+        router.push("/login");
+        router.refresh();
+      },
+      fallbackErrorMessage: "Could not delete account. Please try again.",
+    });
   }
 
   if (!confirming) {

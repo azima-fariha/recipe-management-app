@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { ConsumerApiError, deleteRecipe, updateRecipe } from "@/lib/consumer-api";
-import { decodeAccessToken, getSessionToken } from "@/lib/session";
+import { unauthorizedResponse, withConsumerApiErrors } from "@/lib/api-route";
+import { deleteRecipe, updateRecipe } from "@/lib/consumer-api";
+import { requireSession } from "@/lib/session";
 
 interface RouteParams {
   params: { id: string };
-}
-
-function requireSession(request: NextRequest) {
-  const token = getSessionToken(request);
-  const payload = token ? decodeAccessToken(token) : null;
-  if (!token || !payload) {
-    return null;
-  }
-  return { token, userId: payload.sub };
 }
 
 // Updates a recipe owned by the session's own user. Forwards the Access
@@ -23,45 +15,35 @@ function requireSession(request: NextRequest) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   const session = requireSession(request);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   const { name, ingredients, instructions } = await request.json();
 
-  try {
-    const recipe = await updateRecipe(session.userId, params.id, session.token, {
-      name,
-      ingredients,
-      instructions,
-    });
-    return NextResponse.json({ recipe }, { status: 200 });
-  } catch (error) {
-    if (error instanceof ConsumerApiError) {
-      return NextResponse.json(
-        { error: "Could not update the recipe. Please try again." },
-        { status: error.status },
-      );
-    }
-    throw error;
-  }
+  return withConsumerApiErrors(
+    async () => {
+      const recipe = await updateRecipe(session.userId, params.id, session.token, {
+        name,
+        ingredients,
+        instructions,
+      });
+      return NextResponse.json({ recipe }, { status: 200 });
+    },
+    () => "Could not update the recipe. Please try again.",
+  );
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const session = requireSession(request);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
-  try {
-    await deleteRecipe(session.userId, params.id, session.token);
-    return NextResponse.json({ ok: true }, { status: 200 });
-  } catch (error) {
-    if (error instanceof ConsumerApiError) {
-      return NextResponse.json(
-        { error: "Could not delete the recipe. Please try again." },
-        { status: error.status },
-      );
-    }
-    throw error;
-  }
+  return withConsumerApiErrors(
+    async () => {
+      await deleteRecipe(session.userId, params.id, session.token);
+      return NextResponse.json({ ok: true }, { status: 200 });
+    },
+    () => "Could not delete the recipe. Please try again.",
+  );
 }

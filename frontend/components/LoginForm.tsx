@@ -1,37 +1,36 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { type FormEvent } from "react";
+
+import { useApiAction } from "@/hooks/useApiAction";
 
 export function LoginForm() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const { pending, error, run } = useApiAction();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: formData.get("email"),
-        password: formData.get("password"),
-      }),
-    });
 
-    if (response.ok) {
-      router.push("/");
-      router.refresh();
-      return;
-    }
-
-    setSubmitting(false);
-    const body = await response.json().catch(() => null);
-    setError(body?.error ?? "Something went wrong. Please try again.");
+    await run(
+      () =>
+        fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.get("email"),
+            password: formData.get("password"),
+          }),
+        }),
+      {
+        onSuccess: () => {
+          router.push("/");
+          router.refresh();
+        },
+      },
+    );
   }
 
   return (
@@ -46,8 +45,8 @@ export function LoginForm() {
         Password
         <input name="password" type="password" autoComplete="current-password" required />
       </label>
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Logging in..." : "Log in"}
+      <button type="submit" disabled={pending}>
+        {pending ? "Logging in..." : "Log in"}
       </button>
       <p>
         No account yet? <a href="/signup">Sign up</a>
