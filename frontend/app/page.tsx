@@ -32,6 +32,9 @@ export default async function HomePage() {
     <main>
       <h1>Welcome, {user.full_name ?? user.email}</h1>
       <p>
+        <a href="/profile">Profile</a>
+      </p>
+      <p>
         <a href="/inspiration">Find or invent a recipe from ingredients</a>
       </p>
       <LogoutButton />

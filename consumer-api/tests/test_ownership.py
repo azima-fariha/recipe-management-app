@@ -10,6 +10,7 @@ import auth
 PROTECTED_ROUTES = [
     ("get", "/user/1"),
     ("put", "/user/1"),
+    ("delete", "/user/1"),
     ("get", "/user/1/recipe/abc"),
     ("post", "/user/1/recipe"),
     ("put", "/user/1/recipe/abc"),
@@ -87,6 +88,30 @@ def test_every_user_id_route_rejects_mismatched_token_subject(client, method, pa
     )
 
     assert response.status_code == 403
+
+
+def test_delete_user_rejects_missing_token(client):
+    response = client.delete("/user/1")
+
+    assert response.status_code == 401
+
+
+def test_delete_user_rejects_mismatched_token_subject(client):
+    token = auth.create_access_token(subject="2")
+
+    response = client.delete("/user/1", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 403
+
+
+def test_delete_user_succeeds_with_matching_token(client):
+    token = auth.create_access_token(subject="1")
+
+    with respx.mock:
+        respx.delete("http://localhost:8081/user/1").mock(return_value=httpx.Response(200))
+        response = client.delete("/user/1", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 204
 
 
 def test_update_user_succeeds_with_matching_token(client):
