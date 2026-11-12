@@ -3,3 +3,6 @@ httpx
 uvicorn[standard]
 pydantic
 email-validator
+pyjwt
+pytest
+respx

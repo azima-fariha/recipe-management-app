@@ -1,10 +1,11 @@
 import logging
 
+import security
 import user_repository
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from models import User
-from schemas import UserDto, UserUpdateDto
+from schemas import CredentialsDto, UserCreateDto, UserDto, UserUpdateDto
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -21,14 +22,19 @@ async def get_user(user_id: int, db: Session = Depends(get_db)) -> UserDto:
     return user
 
 @router.post("/user")
-async def create_user(userRequest: UserDto, db: Session = Depends(get_db)) -> UserDto:
+async def create_user(userRequest: UserCreateDto, db: Session = Depends(get_db)) -> UserDto:
     logger.info("Received requests to create user")
     user = User(
         full_name = userRequest.full_name,
         email = userRequest.email,
+        password_hash = security.hash_password(userRequest.password),
         dietary_restrictions = userRequest.dietary_restrictions,
         preferences = userRequest.preferences)
-    return user_repository.create_user(db, user)
+    try:
+        return user_repository.create_user(db, user)
+    except user_repository.DuplicateEmailError as exc:
+        logger.warning("Signup rejected: %s", exc)
+        raise HTTPException(status_code=409, detail="Email is already registered") from exc
 
 @router.put("/user/{user_id}")
 async def update_user(user_id: int, userRequest: UserUpdateDto, db: Session = Depends(get_db)) -> UserUpdateDto:
@@ -39,6 +45,20 @@ async def update_user(user_id: int, userRequest: UserUpdateDto, db: Session = De
         raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
     updated_user = user_repository.update_user(db, user, userRequest)
     return updated_user
+
+@router.post("/internal/users/verify-credentials", tags=["internal"])
+async def verify_credentials(credentials: CredentialsDto, db: Session = Depends(get_db)) -> UserDto:
+    """Internal-only: called by consumer-api over the Docker network, never exposed publicly.
+
+    Returns the matching user on a correct email+password pair. Returns the same
+    401 for an unknown email and a wrong password, so the response never reveals
+    which emails are registered.
+    """
+    logger.info("Received internal request to verify credentials")
+    user = user_repository.get_user_by_email(db, credentials.email)
+    if user is None or not security.verify_password(credentials.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return user
 
 @router.delete("/user/{user_id}")
 async def delete_user(user_id: int, db: Session = Depends(get_db)) -> None:

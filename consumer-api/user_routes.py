@@ -1,15 +1,17 @@
 import logging
 
+import auth
 import httpx
 import user_api
-from fastapi import APIRouter, HTTPException, Request
-from schemas import UserDto, UserUpdateDto
+from fastapi import APIRouter, Depends, HTTPException, Request
+from ownership import require_ownership
+from schemas import TokenResponseDto, UserCreateDto, UserDto, UserUpdateDto
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["users"])
 
-@router.get("/user/{user_id}")
+@router.get("/user/{user_id}", dependencies=[Depends(require_ownership)])
 async def get_user(user_id: int, request: Request) -> UserDto:
     logger.info("Received user request to fetch user id with %s", user_id)
     http_client = request.state.http_client
@@ -21,17 +23,19 @@ async def get_user(user_id: int, request: Request) -> UserDto:
     return UserDto(**user)
 
 @router.post("/user")
-async def create_user(userRequest: UserDto, request: Request) -> UserDto:
+async def create_user(userRequest: UserCreateDto, request: Request) -> TokenResponseDto:
     logger.info("Received request to create a new user")
     http_client = request.state.http_client
     try:
-        user = await user_api.create_user(http_client, userRequest.dict(exclude={"created_at"}))
+        user = await user_api.create_user(http_client, userRequest.model_dump())
     except httpx.HTTPStatusError as ex:
         raise HTTPException(status_code=ex.response.status_code, detail=ex.response.text) from ex
-        
-    return UserDto(**user)
 
-@router.put("/user/{user_id}")
+    # Signup logs the user in immediately: mint an Access Token alongside the created user.
+    access_token = auth.create_access_token(str(user["id"]))
+    return TokenResponseDto(access_token=access_token, user=UserDto(**user))
+
+@router.put("/user/{user_id}", dependencies=[Depends(require_ownership)])
 async def update_user(user_id: int, userRequest: UserUpdateDto, request: Request) -> UserUpdateDto:
     logger.info("Received request to update user with id %s", user_id)
     http_client = request.state.http_client

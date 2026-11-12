@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 import agent_routes
+import auth_routes
 import httpx
 import recipe_routes
 import user_routes
@@ -22,3 +23,4 @@ app = FastAPI(lifespan=lifespan, title="consumer-api")
 app.include_router(recipe_routes.router)
 app.include_router(user_routes.router)
 app.include_router(agent_routes.router)
+app.include_router(auth_routes.router)
