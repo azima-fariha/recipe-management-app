@@ -1,14 +1,26 @@
 from models import User
 from schemas import UserUpdateDto
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
+
+class DuplicateEmailError(Exception):
+    """Raised when creating a user whose email is already registered."""
 
 
 def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).get(user_id)
 
+def get_user_by_email(db: Session, email: str) -> User | None:
+    return db.query(User).filter(User.email == email).first()
+
 def create_user(db:Session, user: User) -> User:
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise DuplicateEmailError(f"Email {user.email} is already registered") from exc
     db.refresh(user)
     return user
 

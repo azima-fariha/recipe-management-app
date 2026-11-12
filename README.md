@@ -54,11 +54,13 @@ This is a microservices-based recipe platform. Users manage recipes through a RE
 - Docker and Docker Compose
 - Python 3.12+ (only for running services outside Docker)
 - An OpenAI API key (used by `recipe-embedding-service` and `discovery-agent-service`)
+- A JWT signing secret (used by `consumer-api` to mint and verify Access Tokens; any sufficiently random string)
 
 ### Run With Docker
 
 ```bash
 export OPENAI_API_KEY=sk-...
+export JWT_SECRET_KEY=some-long-random-string
 docker compose up --build
 ```
 

@@ -15,8 +15,25 @@ class UserDto(BaseModel):
 class UserUpdateDto(BaseModel):
     full_name: Optional[str] = None
     dietary_restrictions: Optional[str] = None
-    preferences: Optional[str] = None    
-    
+    preferences: Optional[str] = None
+
+class UserCreateDto(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    dietary_restrictions: Optional[str] = None
+    preferences: Optional[str] = None
+
+class LoginDto(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenResponseDto(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserDto
+
+
 class RecipeDto(BaseModel):
     id: Optional[str] = None
     name: str

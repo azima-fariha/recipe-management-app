@@ -1,14 +1,15 @@
 import logging
 
 import agent_api
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from ownership import require_ownership
 from schemas import DiscoverRequest, RecipeDto
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["agent"])
 
-@router.post("/user/{user_id}/inspiration")
+@router.post("/user/{user_id}/inspiration", dependencies=[Depends(require_ownership)])
 async def discover_recipe(user_id: str, ingredients: DiscoverRequest, request: Request) -> RecipeDto:
     logger.info("Received request to discover recipes for user_id: %s with ingredients: %s", user_id, ingredients.query)
     http_client = request.state.http_client

@@ -147,6 +147,7 @@ services:
       RECIPE_SERVICE_URL: http://recipe-service:8082
       USER_SERVICE_URL: http://user-service:8081
       AGENT_SERVICE_URL: http://discovery-agent-service:8084
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
       - recipe-service
       - user-service
