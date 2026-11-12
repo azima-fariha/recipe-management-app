@@ -39,6 +39,11 @@ async function parseJsonSafely(response: Response): Promise<unknown> {
   }
 }
 
+/** The `Authorization` header every authenticated request to consumer-api sends. */
+function authHeaders(token: string): HeadersInit {
+  return { Authorization: `Bearer ${token}` };
+}
+
 export async function login(email: string, password: string): Promise<TokenResponse> {
   const response = await fetch(`${CONSUMER_API_URL}/auth/login`, {
     method: "POST",
@@ -80,7 +85,7 @@ export async function signup(data: SignupRequest): Promise<TokenResponse> {
  */
 export async function fetchUser(userId: string, token: string): Promise<ApiUser> {
   const response = await fetch(`${CONSUMER_API_URL}/user/${userId}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   const body = await parseJsonSafely(response);
@@ -111,7 +116,7 @@ export async function updateUser(
 ): Promise<Partial<ApiUser>> {
   const response = await fetch(`${CONSUMER_API_URL}/user/${userId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
     body: JSON.stringify(data),
   });
 
@@ -126,7 +131,7 @@ export async function updateUser(
 export async function deleteUser(userId: string, token: string): Promise<void> {
   const response = await fetch(`${CONSUMER_API_URL}/user/${userId}`, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   if (!response.ok) {
@@ -155,10 +160,6 @@ export interface RecipeUpdateInput {
   name?: string;
   ingredients?: string[];
   instructions?: string;
-}
-
-function authHeaders(token: string): HeadersInit {
-  return { Authorization: `Bearer ${token}` };
 }
 
 /** Lists the owning user's recipes. See GLOSSARY.md > Ownership. */
@@ -255,10 +256,7 @@ export async function discoverRecipe(
 ): Promise<ApiRecipe> {
   const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/inspiration`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
     body: JSON.stringify({ query }),
   });
 

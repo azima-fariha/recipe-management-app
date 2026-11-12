@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { useApiAction } from "@/hooks/useApiAction";
+
 interface ProfileFormProps {
   initialFullName: string | null;
   initialDietaryRestrictions: string | null;
@@ -15,37 +17,33 @@ export function ProfileForm({
   initialPreferences,
 }: ProfileFormProps) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const { pending, error, run } = useApiAction();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     setSuccess(false);
-    setSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name: formData.get("full_name"),
-        dietary_restrictions: formData.get("dietary_restrictions"),
-        preferences: formData.get("preferences"),
-      }),
-    });
 
-    setSubmitting(false);
-
-    if (response.ok) {
-      setSuccess(true);
-      router.refresh();
-      return;
-    }
-
-    const body = await response.json().catch(() => null);
-    setError(body?.error ?? "Something went wrong. Please try again.");
+    await run(
+      () =>
+        fetch("/api/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            full_name: formData.get("full_name"),
+            dietary_restrictions: formData.get("dietary_restrictions"),
+            preferences: formData.get("preferences"),
+          }),
+        }),
+      {
+        onSuccess: () => {
+          setSuccess(true);
+          router.refresh();
+        },
+      },
+    );
   }
 
   return (
@@ -64,8 +62,8 @@ export function ProfileForm({
         Preferences
         <textarea name="preferences" defaultValue={initialPreferences ?? ""} />
       </label>
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Saving..." : "Save changes"}
+      <button type="submit" disabled={pending}>
+        {pending ? "Saving..." : "Save changes"}
       </button>
     </form>
   );

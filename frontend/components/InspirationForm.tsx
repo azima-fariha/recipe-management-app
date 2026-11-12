@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 
+import { useApiAction } from "@/hooks/useApiAction";
+
 interface Recipe {
   id: string | null;
   name: string;
@@ -10,35 +12,25 @@ interface Recipe {
 }
 
 export function InspirationForm() {
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const { pending, error, run } = useApiAction();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     setRecipe(null);
-    setLoading(true);
 
     const formData = new FormData(event.currentTarget);
     const query = String(formData.get("ingredients") ?? "");
 
-    try {
-      const response = await fetch("/api/inspiration", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      const body = await response.json().catch(() => null);
-      if (!response.ok) {
-        setError(body?.error ?? "Something went wrong. Please try again.");
-        return;
-      }
-      setRecipe(body.recipe);
-    } finally {
-      setLoading(false);
-    }
+    await run<{ recipe: Recipe }>(
+      () =>
+        fetch("/api/inspiration", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        }),
+      { onSuccess: (body) => setRecipe(body.recipe) },
+    );
   }
 
   return (
@@ -50,16 +42,16 @@ export function InspirationForm() {
           <textarea
             name="ingredients"
             required
-            disabled={loading}
+            disabled={pending}
             placeholder="e.g. eggs, flour, milk"
           />
         </label>
-        <button type="submit" disabled={loading}>
-          {loading ? "Searching..." : "Find a recipe"}
+        <button type="submit" disabled={pending}>
+          {pending ? "Searching..." : "Find a recipe"}
         </button>
       </form>
 
-      {loading && (
+      {pending && (
         <p role="status">Looking for a recipe... this can take a moment.</p>
       )}
       {error && <p role="alert">{error}</p>}
