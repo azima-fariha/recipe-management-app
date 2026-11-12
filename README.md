@@ -6,6 +6,8 @@ discover or invent recipes from a list of ingredients.
 
 ## Architecture
 
+![System Design](system-design.jpg)
+
 ```mermaid
 flowchart LR
     Client(["Client"]) --> Gateway["consumer-api :8088\n(API Gateway)"]
