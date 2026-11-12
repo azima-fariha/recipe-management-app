@@ -8,24 +8,6 @@ discover or invent recipes from a list of ingredients.
 
 ![System Design](system-design.jpg)
 
-```mermaid
-flowchart LR
-    Client(["Client"]) --> Gateway["consumer-api :8088\n(API Gateway)"]
-
-    Gateway --> UserSvc["user-service :8081\n(MySQL)"]
-    Gateway --> RecipeSvc["recipe-service :8082\n(MongoDB)"]
-    Gateway --> Discovery["discovery-agent-service :8084\n(LangChain agent)"]
-
-    RecipeSvc -- "recipe-created topic" --> Kafka[("Kafka")]
-    Kafka --> Embedding["recipe-embedding-service :8083\n(OpenAI embeddings)"]
-    Embedding --> Qdrant[("Qdrant\nvector store")]
-
-    Discovery --> RecipeMCP["recipe-mcp-server :8085"]
-    Discovery --> UserMCP["user-mcp-server :8086"]
-    RecipeMCP --> Embedding
-    UserMCP --> UserSvc
-    Discovery -. "invents a recipe" .-> OpenAI(["OpenAI API"])
-```
 
 **Flow summary**
 
