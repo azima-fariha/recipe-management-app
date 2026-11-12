@@ -4,10 +4,10 @@
 
 **Blocked by:** 02 (frontend shell)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A recipe list page shows the logged-in user's recipes
-- [ ] The user can create a new recipe (name, ingredients, instructions)
-- [ ] The user can view a single recipe's full details
-- [ ] The user can edit an existing recipe
-- [ ] The user can delete a recipe
+- [x] A recipe list page shows the logged-in user's recipes
+- [x] The user can create a new recipe (name, ingredients, instructions)
+- [x] The user can view a single recipe's full details
+- [x] The user can edit an existing recipe
+- [x] The user can delete a recipe
