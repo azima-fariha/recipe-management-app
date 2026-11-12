@@ -153,6 +153,15 @@ services:
       - user-service
       - discovery-agent-service
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      CONSUMER_API_URL: http://consumer-api:8088
+    depends_on:
+      - consumer-api
+
 volumes:
   mongodb_data:
   mysql_data:
