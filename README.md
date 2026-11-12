@@ -1,28 +1,18 @@
 # Recipe Management App
 
-A microservices-based recipe platform: users manage recipes through a REST gateway, recipe
-creation events flow through Kafka into a vector store, and an LLM agent uses MCP tools to
-discover or invent recipes from a list of ingredients.
+This is a microservices-based recipe platform. Users manage recipes through a REST gateway, recipe events flow through Kafka into a vector store, and an LLM agent uses MCP tools to discover or invent recipes from a list of ingredients.
 
 ## Architecture
 
 ![System Design](system-design.jpg)
 
-
-**Flow summary**
-
-1. A client talks only to **consumer-api**, which proxies requests to the internal services.
-2. Creating/updating/deleting a recipe in **recipe-service** publishes an event to the Kafka
-   topic `recipe-created`.
-3. **recipe-embedding-service** consumes that topic, embeds the recipe text with OpenAI
-   (`text-embedding-3-large`), and upserts it into **Qdrant**.
-4. For "find me something to cook" requests, **discovery-agent-service** runs a LangChain
-   agent (`gpt-4.1-mini`) that calls two MCP servers as tools:
-   - **recipe-mcp-server** → searches the user's existing recipes by ingredient similarity
-     (via recipe-embedding-service).
-   - **user-mcp-server** → looks up the user's dietary preferences (via user-service).
-   If no matching recipe exists, the agent invents one that fits the ingredients and the
-   user's preferences instead of returning nothing.
+1. A client talks only to [consumer-api](consumer-api), which proxies requests to the internal services.
+2. Creating, updating or deleting a recipe in [recipe-service](recipe-service) publishes an event to the Kafka topic `recipe-log`, keyed by `recipe_id`. A delete publishes a tombstone (`value=None`).
+3. [recipe-embedding-service](recipe-embedding-service) consumes that topic, embeds the recipe text with OpenAI (`text-embedding-3-large`), and upserts it into Qdrant.
+4. For "find me something to cook" requests, [discovery-agent-service](discovery-agent-service) runs a LangChain agent (`gpt-4.1-mini`) that calls two MCP servers as tools:
+   - [recipe-mcp-server](recipe-mcp-server) searches the user's existing recipes by ingredient similarity (via recipe-embedding-service).
+   - [user-mcp-server](user-mcp-server) looks up the user's dietary preferences (via user-service).
+- If no matching recipe exists, the agent invents one that fits the ingredients and the user's preferences instead of returning nothing.
 
 ## Services
 
@@ -36,47 +26,54 @@ discover or invent recipes from a list of ingredients.
 | [recipe-mcp-server](recipe-mcp-server) | 8085 | MCP tool wrapper: `get_recipe_by_ingredient` | recipe-embedding-service |
 | [user-mcp-server](user-mcp-server) | 8086 | MCP tool wrapper: `get_user_by_id` | user-service |
 
+- Each service has its own README with service-specific details.
+
 ### Infrastructure
 
 | Component | Role |
 |---|---|
 | MySQL | User records (`recipe_user_db`) |
 | MongoDB | Recipe documents |
-| Kafka + Zookeeper | `recipe-created` event stream between recipe-service and recipe-embedding-service |
+| Kafka + Zookeeper | `recipe-log` event stream between recipe-service and recipe-embedding-service |
 | Qdrant | Vector store for ingredient-similarity search |
 
-## Tech stack
+## Tech Stack
 
-- **API layer:** FastAPI, Pydantic, uvicorn
-- **Persistence:** SQLAlchemy + PyMySQL (users), Beanie/Motor over MongoDB (recipes), Qdrant (vectors)
+- **Framework:** FastAPI + uvicorn
+- **Validation:** Pydantic
+- **Persistence:** SQLAlchemy + PyMySQL (users), Beanie over MongoDB (recipes), Qdrant (vectors)
 - **Messaging:** Kafka via aiokafka
 - **AI/Agents:** LangChain, LangGraph, `langchain-mcp-adapters`, OpenAI (`gpt-4.1-mini`, `text-embedding-3-large`)
 - **MCP:** FastMCP (streamable-HTTP transport)
 - **Packaging:** Docker / Docker Compose, one Dockerfile per service
 
-## Getting started
+## How To Run
 
 ### Prerequisites
 
 - Docker and Docker Compose
+- Python 3.12+ (only for running services outside Docker)
 - An OpenAI API key (used by `recipe-embedding-service` and `discovery-agent-service`)
 
-### Run everything
+### Run With Docker
 
 ```bash
 export OPENAI_API_KEY=sk-...
 docker compose up --build
 ```
 
-This starts the infrastructure (MySQL, MongoDB, Kafka/Zookeeper, Qdrant) and all seven
-application services, wired together with the URLs and credentials in
-[docker-compose.yml](docker-compose.yml). Each service also has its own Dockerfile if you
-need to build or run it standalone.
+- This starts the infrastructure (MySQL, MongoDB, Kafka/Zookeeper, Qdrant) and all seven application services.
+- All URLs and credentials are injected automatically from [docker-compose.yml](docker-compose.yml).
 
-### Local (non-Docker) development
+### Run Locally
 
-Each service is an independent FastAPI (or FastMCP) app with its own `requirements.txt`.
-From a service directory:
+- Start only the infrastructure containers:
+
+```bash
+docker compose up mysql mongodb kafka zookeeper qdrant
+```
+
+- Then, from a service directory:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
@@ -84,49 +81,4 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port <service-port>   # or `python <name>-server.py` for the MCP servers
 ```
 
-Services read their downstream URLs from environment variables (e.g. `USER_SERVICE_URL`,
-`RECIPE_SERVICE_URL`, `KAFKA_BOOTSTRAP_SERVERS`, `QDRANT_URL`) with `localhost`-based
-defaults, so standing up the infra containers alone (`docker compose up mysql mongodb kafka
-zookeeper qdrant`) and running services natively also works.
-
-### Key environment variables
-
-| Variable | Used by | Purpose |
-|---|---|---|
-| `DATABASE_URL` | user-service | MySQL connection string |
-| `MONGO_URL` | recipe-service | MongoDB connection string |
-| `KAFKA_BOOTSTRAP_SERVERS` | recipe-service, recipe-embedding-service | Kafka broker address |
-| `QDRANT_URL` | recipe-embedding-service | Qdrant endpoint |
-| `OPENAI_API_KEY` | recipe-embedding-service, discovery-agent-service | OpenAI API access |
-| `USER_SERVICE_URL` | consumer-api, user-mcp-server | Address of user-service |
-| `RECIPE_SERVICE_URL` | consumer-api | Address of recipe-service |
-| `RECIPE_EMBEDDING_SERVICE_URL` | recipe-mcp-server | Address of recipe-embedding-service |
-| `AGENT_SERVICE_URL` | consumer-api | Address of discovery-agent-service |
-| `RECIPE_MCP_URL` / `USER_MCP_URL` | discovery-agent-service | MCP server endpoints (`/mcp`) |
-
-## API reference (via consumer-api, `:8088`)
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/user` | Create a user |
-| `GET` | `/user/{user_id}` | Fetch a user |
-| `PUT` | `/user/{user_id}` | Update a user |
-| `POST` | `/user/{user_id}/recipe` | Create a recipe |
-| `GET` | `/user/{user_id}/recipe/{recipe_id}` | Fetch a recipe |
-| `PUT` | `/user/{user_id}/recipe/{recipe_id}` | Update a recipe |
-| `DELETE` | `/user/{user_id}/recipe/{recipe_id}` | Delete a recipe |
-| `POST` | `/user/{user_id}/inspiration` | Find or invent a recipe from a list of ingredients (via discovery-agent-service) |
-
-## Project structure
-
-```
-recipe-management-app/
-├── consumer-api/              # Public API gateway
-├── user-service/              # User CRUD (MySQL)
-├── recipe-service/            # Recipe CRUD + Kafka producer (MongoDB)
-├── recipe-embedding-service/  # Kafka consumer → OpenAI embeddings → Qdrant
-├── discovery-agent-service/   # LangChain agent for recipe discovery
-├── recipe-mcp-server/         # MCP tool: recipe search by ingredient
-├── user-mcp-server/           # MCP tool: user lookup
-└── docker-compose.yml         # Full stack: infra + all services
-```
+- Services read their downstream URLs from environment variables, set via a `.env` file in the service directory or exported in the shell. Most have `localhost`-based defaults.
