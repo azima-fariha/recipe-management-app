@@ -89,3 +89,39 @@ export async function fetchUser(userId: string, token: string): Promise<ApiUser>
   }
   return body as ApiUser;
 }
+
+export interface ApiRecipe {
+  id: string | null;
+  name: string;
+  ingredients: string[];
+  instructions: string;
+}
+
+/**
+ * Calls consumer-api's "find or invent a recipe" agent flow
+ * (`POST /user/{user_id}/inspiration`), forwarding the Access Token the same
+ * way `fetchUser` does. consumer-api responds with a recipe (found among the
+ * user's own recipes, or invented, taking their dietary restrictions and
+ * preferences into account server-side) or a 404 if nothing was found or
+ * invented for the given ingredients.
+ */
+export async function discoverRecipe(
+  userId: string,
+  token: string,
+  query: string,
+): Promise<ApiRecipe> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/inspiration`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as ApiRecipe;
+}
