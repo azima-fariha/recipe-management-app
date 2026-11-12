@@ -4,6 +4,7 @@ import auth
 import httpx
 import user_api
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import Response
 from ownership import require_ownership
 from schemas import TokenResponseDto, UserCreateDto, UserDto, UserUpdateDto
 
@@ -43,5 +44,16 @@ async def update_user(user_id: int, userRequest: UserUpdateDto, request: Request
         user = await user_api.update_user(http_client, user_id, userRequest.dict(exclude_unset=True))
     except httpx.HTTPStatusError as ex:
         raise HTTPException(status_code=ex.response.status_code, detail=ex.response.text) from ex
-        
+
     return UserUpdateDto(**user)
+
+@router.delete("/user/{user_id}", dependencies=[Depends(require_ownership)])
+async def delete_user(user_id: str, request: Request):
+    logger.info("Received request to delete user with id %s", user_id)
+    http_client = request.state.http_client
+    try:
+        await user_api.delete_user(http_client, user_id)
+    except httpx.HTTPStatusError as ex:
+        raise HTTPException(status_code=ex.response.status_code, detail=ex.response.text) from ex
+
+    return Response(status_code=204)

@@ -89,3 +89,48 @@ export async function fetchUser(userId: string, token: string): Promise<ApiUser>
   }
   return body as ApiUser;
 }
+
+export interface UpdateUserRequest {
+  full_name?: string;
+  dietary_restrictions?: string | null;
+  preferences?: string | null;
+}
+
+/**
+ * Updates a user's profile via consumer-api's `PUT /user/{user_id}`.
+ *
+ * Note: that route currently echoes back only `full_name`,
+ * `dietary_restrictions`, and `preferences` (not `id`/`email`) — a
+ * pre-existing trait of consumer-api's response shape, not something this
+ * ticket changes.
+ */
+export async function updateUser(
+  userId: string,
+  token: string,
+  data: UpdateUserRequest,
+): Promise<Partial<ApiUser>> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as Partial<ApiUser>;
+}
+
+/** Deletes a user's own account via consumer-api's `DELETE /user/{user_id}`. */
+export async function deleteUser(userId: string, token: string): Promise<void> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const body = await parseJsonSafely(response);
+    throw new ConsumerApiError(response.status, body);
+  }
+}
