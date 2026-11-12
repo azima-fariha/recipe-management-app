@@ -11,6 +11,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["recipes"])
 
+@router.get("/user/{user_id}/recipe", dependencies=[Depends(require_ownership)])
+async def list_recipes(user_id: str, request: Request) -> list[RecipeDto]:
+    logger.info("Received user request to list recipes for user_id: %s", user_id)
+    http_client = request.state.http_client
+    try:
+        recipes = await recipe_api.list_recipes(http_client, user_id)
+    except httpx.HTTPStatusError as ex:
+        raise HTTPException(status_code=ex.response.status_code, detail=ex.response.text) from ex
+
+    return [RecipeDto(**recipe) for recipe in recipes]
+
 @router.get("/user/{user_id}/recipe/{recipe_id}", dependencies=[Depends(require_ownership)])
 async def fetch_recipe(user_id: str, recipe_id:str, request: Request) -> RecipeDto:
     logger.info("Received user request to fetch recipe with user_id: %s, recipe_id: %s", user_id, recipe_id)

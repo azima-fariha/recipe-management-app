@@ -27,6 +27,10 @@ async def get_recipe_by_id(user_id: str, recipe_id: str) -> Recipe:
     
     return recipe
 
+async def list_recipes_by_user(user_id: str) -> list[Recipe]:
+    logger.info("Listing recipes for user_id: %s", user_id)
+    return await recipe_repository.get_recipes_by_user_id(user_id)
+
 async def create_recipe(recipe: Recipe, user_id: str, client: AsyncClient) -> Recipe:
     await user_api.fetch_user(client, user_id)
 

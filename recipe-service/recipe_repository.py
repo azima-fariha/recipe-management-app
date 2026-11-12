@@ -7,6 +7,9 @@ from models import Recipe
 async def get_recipe_by_id(recipe_id: str) -> Optional[Recipe]:
     return await Recipe.get(PydanticObjectId(recipe_id))
 
+async def get_recipes_by_user_id(user_id: str) -> list[Recipe]:
+    return await Recipe.find(Recipe.user_id == user_id).to_list()
+
 async def create_recipe(recipe: Recipe) -> Recipe:
     return await recipe.insert()
 

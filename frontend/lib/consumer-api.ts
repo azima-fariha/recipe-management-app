@@ -136,10 +136,108 @@ export async function deleteUser(userId: string, token: string): Promise<void> {
 }
 
 export interface ApiRecipe {
+  // Nullable because the "find or invent" flow (discoverRecipe, below) can
+  // return a freshly-invented recipe that hasn't been saved yet. Recipes
+  // fetched/created/updated via the functions below always have a real id.
   id: string | null;
   name: string;
   ingredients: string[];
   instructions: string;
+}
+
+export interface RecipeInput {
+  name: string;
+  ingredients: string[];
+  instructions: string;
+}
+
+export interface RecipeUpdateInput {
+  name?: string;
+  ingredients?: string[];
+  instructions?: string;
+}
+
+function authHeaders(token: string): HeadersInit {
+  return { Authorization: `Bearer ${token}` };
+}
+
+/** Lists the owning user's recipes. See GLOSSARY.md > Ownership. */
+export async function fetchRecipes(userId: string, token: string): Promise<ApiRecipe[]> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/recipe`, {
+    headers: authHeaders(token),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as ApiRecipe[];
+}
+
+/** Fetches a single recipe's full details. */
+export async function fetchRecipeById(
+  userId: string,
+  recipeId: string,
+  token: string,
+): Promise<ApiRecipe> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/recipe/${recipeId}`, {
+    headers: authHeaders(token),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as ApiRecipe;
+}
+
+export async function createRecipe(
+  userId: string,
+  token: string,
+  data: RecipeInput,
+): Promise<ApiRecipe> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/recipe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify(data),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as ApiRecipe;
+}
+
+export async function updateRecipe(
+  userId: string,
+  recipeId: string,
+  token: string,
+  data: RecipeUpdateInput,
+): Promise<ApiRecipe> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/recipe/${recipeId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify(data),
+  });
+
+  const body = await parseJsonSafely(response);
+  if (!response.ok) {
+    throw new ConsumerApiError(response.status, body);
+  }
+  return body as ApiRecipe;
+}
+
+export async function deleteRecipe(userId: string, recipeId: string, token: string): Promise<void> {
+  const response = await fetch(`${CONSUMER_API_URL}/user/${userId}/recipe/${recipeId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+
+  if (!response.ok) {
+    const body = await parseJsonSafely(response);
+    throw new ConsumerApiError(response.status, body);
+  }
 }
 
 /**
