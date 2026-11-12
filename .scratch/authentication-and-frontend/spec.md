@@ -64,7 +64,9 @@ Add password-based login to the platform, enforced at `consumer-api` (the gatewa
 - A logout route handler simply clears the cookie — it makes no call to `consumer-api`.
 - Every other server-side call to `consumer-api` (Server Component data fetches, other route handlers) reads the token out of its own cookie and forwards it as `Authorization: Bearer <token>` — this is the same mechanism a non-browser API client would use directly against `consumer-api`, so nothing about `consumer-api`'s auth dependency is browser-specific.
 
-**Explicitly unchanged**: `recipe-service`, `recipe-embedding-service`, `discovery-agent-service`, `recipe-mcp-server`, `user-mcp-server`.
+**Explicitly unchanged**: `recipe-embedding-service`, `discovery-agent-service`, `recipe-mcp-server`, `user-mcp-server`.
+
+**Amendment (post-implementation):** `recipe-service` turned out to need one small additive change after all — there was no way to list a user's recipes anywhere in the stack (only get-by-id/create/update/delete existed), which the recipe list page genuinely requires. A plain `GET /user/{user_id}/recipe` route was added there, matching the existing unauthenticated-internal-route shape of every other route in that file (`consumer-api`'s ownership check is, and remains, the only auth gate). Reviewed and accepted as a necessary gap-fill rather than scope creep.
 
 ## Testing Decisions
 
