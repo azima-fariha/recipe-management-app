@@ -10,6 +10,7 @@ import auth
 PROTECTED_ROUTES = [
     ("get", "/user/1"),
     ("put", "/user/1"),
+    ("get", "/user/1/recipe"),
     ("get", "/user/1/recipe/abc"),
     ("post", "/user/1/recipe"),
     ("put", "/user/1/recipe/abc"),
@@ -176,6 +177,26 @@ def test_delete_recipe_succeeds_with_matching_token(client):
         )
 
     assert response.status_code == 204
+
+
+def test_list_recipes_succeeds_with_matching_token(client):
+    token = auth.create_access_token(subject="1")
+
+    with respx.mock:
+        respx.get("http://localhost:8082/user/1/recipe").mock(
+            return_value=httpx.Response(
+                200,
+                json=[
+                    {"id": "abc", "name": "Soup", "ingredients": ["water"], "instructions": "Boil"},
+                    {"id": "def", "name": "Salad", "ingredients": ["lettuce"], "instructions": "Toss"},
+                ],
+            )
+        )
+        response = client.get("/user/1/recipe", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [recipe["name"] for recipe in body] == ["Soup", "Salad"]
 
 
 def test_discover_recipe_succeeds_with_matching_token(client):

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -31,6 +32,9 @@ export default async function HomePage() {
   return (
     <main>
       <h1>Welcome, {user.full_name ?? user.email}</h1>
+      <p>
+        <Link href="/recipes">Your recipes</Link>
+      </p>
       <LogoutButton />
     </main>
   );

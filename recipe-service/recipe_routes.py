@@ -11,6 +11,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["recipes"])
 
+@router.get("/user/{user_id}/recipe")
+async def list_recipes(user_id: str) -> list[RecipeDto]:
+    logger.info("Received request to list recipes for user_id: %s", user_id)
+    recipes = await recipe_service.list_recipes_by_user(user_id)
+    return [mapper.to_dto(recipe) for recipe in recipes]
+
 @router.get("/user/{user_id}/recipe/{recipe_id}")
 async def get_recipe(user_id: str, recipe_id: str) -> RecipeDto:
     logger.info("Received request to fetch recipe with user_id: %s recipe_id: %s ", user_id, recipe_id)
