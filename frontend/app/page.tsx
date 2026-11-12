@@ -34,6 +34,9 @@ export default async function HomePage() {
       <p>
         <a href="/profile">Profile</a>
       </p>
+      <p>
+        <a href="/inspiration">Find or invent a recipe from ingredients</a>
+      </p>
       <LogoutButton />
     </main>
   );
