@@ -4,12 +4,12 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `POST /user` (signup) accepts a password, stores only a bcrypt hash of it (never the plaintext, never returned by any endpoint), and returns an access token alongside the created user
-- [ ] A new, internal-only `user-service` endpoint verifies an email+password pair and returns the matching user on success; returns the same error for "unknown email" and "wrong password" so neither leaks which emails are registered
-- [ ] `POST /auth/login` on `consumer-api` accepts `{email, password}`, calls the verification above, and returns an access token on success or 401 on failure
-- [ ] Every existing route with `user_id` in the path (`/user/{user_id}`, `/user/{user_id}/recipe/...`, `/user/{user_id}/inspiration`) returns 401 when the request has no token, or an invalid/expired one
-- [ ] Every such route returns 403 when the token's subject doesn't match the `user_id` in the path
-- [ ] Existing behavior (200/404/etc.) is unchanged when the token is valid and matches the path's `user_id`
-- [ ] `recipe-service`, `recipe-embedding-service`, and `discovery-agent-service` are untouched
+- [x] `POST /user` (signup) accepts a password, stores only a bcrypt hash of it (never the plaintext, never returned by any endpoint), and returns an access token alongside the created user
+- [x] A new, internal-only `user-service` endpoint verifies an email+password pair and returns the matching user on success; returns the same error for "unknown email" and "wrong password" so neither leaks which emails are registered
+- [x] `POST /auth/login` on `consumer-api` accepts `{email, password}`, calls the verification above, and returns an access token on success or 401 on failure
+- [x] Every existing route with `user_id` in the path (`/user/{user_id}`, `/user/{user_id}/recipe/...`, `/user/{user_id}/inspiration`) returns 401 when the request has no token, or an invalid/expired one
+- [x] Every such route returns 403 when the token's subject doesn't match the `user_id` in the path
+- [x] Existing behavior (200/404/etc.) is unchanged when the token is valid and matches the path's `user_id`
+- [x] `recipe-service`, `recipe-embedding-service`, and `discovery-agent-service` are untouched
