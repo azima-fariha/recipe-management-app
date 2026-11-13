@@ -17,11 +17,9 @@ from checks import (
 from client import ConsumerApiClient, DEFAULT_CONSUMER_API_URL
 from denylist import denylisted_ingredients
 from golden_set import ADVERSARIAL, CROSS_USER_ISOLATION, DENYLIST_CALIBRATION, HALLUCINATION_LIVE, JUDGE_CALIBRATION, build_cases
-from judge import judge_hallucination
+from judge import JUDGE_MODEL, judge_hallucination
 from report import CaseResult, render_markdown
 from seed import seed_eval_users
-
-JUDGE_MODEL = "gpt-4.1"
 
 
 def _to_recipe_like(body: dict) -> RecipeLike:
@@ -140,21 +138,22 @@ def main() -> int:
     consumer_api_url = os.environ.get("CONSUMER_API_URL", DEFAULT_CONSUMER_API_URL)
     client = ConsumerApiClient(base_url=consumer_api_url)
 
-    print(f"Seeding eval users against {consumer_api_url} ...")
-    ctx = seed_eval_users(client)
-    cases = build_cases(ctx)
+    try:
+        print(f"Seeding eval users against {consumer_api_url} ...")
+        ctx = seed_eval_users(client)
+        cases = build_cases(ctx)
 
-    results = []
-    for case in cases:
-        print(f"Running {case.id} ...")
-        try:
-            result = _score_case(client, case)
-        except Exception as exc:  # noqa: BLE001 - a crashed case is a failed case, not a crashed run
-            result = CaseResult(case.id, case.category, case.description, False, {}, f"raised: {exc!r}")
-        results.append(result)
-        print(f"  -> {'pass' if result.passed else 'FAIL'}")
-
-    client.close()
+        results = []
+        for case in cases:
+            print(f"Running {case.id} ...")
+            try:
+                result = _score_case(client, case)
+            except Exception as exc:  # noqa: BLE001 - a crashed case is a failed case, not a crashed run
+                result = CaseResult(case.id, case.category, case.description, False, {}, f"raised: {exc!r}")
+            results.append(result)
+            print(f"  -> {'pass' if result.passed else 'FAIL'}")
+    finally:
+        client.close()
 
     markdown = render_markdown(results, judge_model=JUDGE_MODEL)
     results_dir = os.path.join(os.path.dirname(__file__), "results")

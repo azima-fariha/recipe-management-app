@@ -29,7 +29,7 @@ this in CI, since there is no CI in this repo.
 | Category | Mechanism | Cases |
 |---|---|---|
 | Retrieval | Deterministic: exact diff against the actual seeded recipe | 2 |
-| Cross-user isolation | Deterministic: confirms the Qdrant `user_id` filter holds | 2 |
+| Cross-user isolation | Deterministic leak check (Qdrant `user_id` filter), plus the same Hallucination judge + denylist as the invent path, since isolation failing routes straight into inventing | 2 |
 | Hallucination (invent path) | `gpt-4.1` judge + ingredient denylist backstop | 2 |
 | Judge calibration | Proves the judge itself catches a known violation and passes a known-safe case | 2 |
 | Denylist calibration | Proves the denylist backstop catches an outright toxic ingredient | 1 |
