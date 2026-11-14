@@ -47,10 +47,21 @@ automatically and points at the `mysql` container.
 ## API Reference
 
 - Swagger API: `http://localhost:8081/docs`
+- `POST /user` now requires a `password`; it is hashed (bcrypt) before storage and never returned by any endpoint.
 - `PUT /user/{user_id}` accepts a partial `UserUpdateDto` (`full_name` `dietary_restrictions`, `preferences`). Only the fields present in the request body are updated.
+- `POST /internal/users/verify-credentials` is **internal-only** — called by `consumer-api` over the Docker network, never exposed publicly. Given `{email, password}`, it returns the matching user on success, or 401 for both an unknown email and a wrong password (same response for both, so it never reveals which emails are registered).
 
 ## Known Clients
 
 - This is an internal service.
-- [consumer-api](../consumer-api) (public gateway).
+- [consumer-api](../consumer-api) (public gateway) — also the only caller of `POST /internal/users/verify-credentials`.
 - [user-mcp-server](../user-mcp-server) which reads user data and makes it available for the discovery agent.
+
+## Tests
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+- `TestClient` against the FastAPI app, with an in-memory SQLite database swapped in via the existing `get_db` dependency override — no real MySQL needed.

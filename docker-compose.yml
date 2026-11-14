@@ -147,10 +147,20 @@ services:
       RECIPE_SERVICE_URL: http://recipe-service:8082
       USER_SERVICE_URL: http://user-service:8081
       AGENT_SERVICE_URL: http://discovery-agent-service:8084
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
       - recipe-service
       - user-service
       - discovery-agent-service
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      CONSUMER_API_URL: http://consumer-api:8088
+    depends_on:
+      - consumer-api
 
 volumes:
   mongodb_data:

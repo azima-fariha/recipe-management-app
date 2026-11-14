@@ -59,6 +59,17 @@ docker run -p 8082:8082 \
   recipe-service
 ```
 
+### Run Tests
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+- `TestClient` against the FastAPI app; the lifespan's Mongo/Kafka startup is
+  stubbed out (see `conftest.py`) and the repository (the DB I/O boundary) is
+  mocked — no MongoDB or Kafka broker needs to be running.
+
 Or, from the repo root, run it as part of the full stack:
 
 ```bash
@@ -71,6 +82,7 @@ injected automatically and point at the `mongodb` and `kafka` containers.
 ## API Reference
 
 - Swagger API:: `http://localhost:8082/docs`
+- `GET /user/{user_id}/recipe` lists all recipes owned by `user_id`.
 - `PUT /user/{user_id}/recipe/{recipe_id}` accepts a partial `RecipeUpdateDto` (`name`, `ingredients`, `instructions`). Only the fields present in the request body are updated.
 
 ## Known Clients

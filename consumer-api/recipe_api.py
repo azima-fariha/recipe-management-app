@@ -7,6 +7,12 @@ logger = logging.getLogger(__name__)
 
 RECIPE_SERVICE_URL = os.environ.get("RECIPE_SERVICE_URL", "http://localhost:8082")
 
+async def list_recipes(client: AsyncClient, user_id: str):
+    logger.info("Calling recipe-service to list recipes for user_id %s", user_id)
+    response = await client.get(f"{RECIPE_SERVICE_URL}/user/{user_id}/recipe")
+    response.raise_for_status()
+    return response.json()
+
 async def fetch_recipe(client: AsyncClient, user_id: str, recipe_id: str):
     logger.info("Calling recipe-service with user_id %s, recipe_id: %s", user_id, recipe_id)
     response = await client.get(f"{RECIPE_SERVICE_URL}/user/{user_id}/recipe/{recipe_id}")
