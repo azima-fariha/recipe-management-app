@@ -29,6 +29,9 @@ export default async function RecipesPage() {
 
   return (
     <main>
+      <p>
+        <Link href="/">Back home</Link>
+      </p>
       <h1>Your recipes</h1>
       <p>
         <Link href="/recipes/new">New recipe</Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 
 import { useApiAction } from "@/hooks/useApiAction";
 
@@ -35,6 +36,9 @@ export function InspirationForm() {
 
   return (
     <main>
+      <p>
+        <Link href="/">Back home</Link>
+      </p>
       <h1>Find or invent a recipe</h1>
       <form onSubmit={handleSubmit}>
         <label>

@@ -225,3 +225,6 @@ __marimo__/
 
 # System design notes
 system_design_script.md
+
+# Agent eval run output (point-in-time reports, not source)
+discovery-agent-service/eval/results/
