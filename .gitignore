@@ -223,8 +223,12 @@ __marimo__/
 .streamlit/secrets.toml
 /timer
 
-# System design notes
+# Interview prep notes (personal, not project documentation)
 system_design_script.md
+interview-prep-agent-harness-questions.md
+
+# Personal learning material: lessons, notes, references (not part of the project)
+lessons/
 
 # Agent eval run output (point-in-time reports, not source)
 discovery-agent-service/eval/results/
